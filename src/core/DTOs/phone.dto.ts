@@ -5,7 +5,7 @@ export class PhoneDTO {
   @ApiProperty({ description: "The user's phone number" })
   @IsString()
   @IsNotEmpty()
-  @Length(10, 11)
+  @Length(10, 11, { message: 'The phone must minimal length between 10 and 11 characters' })
   phoneNumber: string;
 
   @ApiProperty({ description: "The user's phone type" })

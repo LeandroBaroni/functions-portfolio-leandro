@@ -2,6 +2,7 @@ import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as firebaseAdmin from 'firebase-admin';
 import { ApiError } from 'src/core/exceptions/ApiError';
+import { FirebaseRepository } from 'src/core/repositories/firebase.repository';
 import { FirebaseConfigService } from './firebase-config.service';
 import { FirebaseService } from './firebase.service';
 
@@ -51,8 +52,8 @@ export class FirebaseModule {
 
     return {
       module: FirebaseModule,
-      providers: [firebaseConfigProvider, firebaseProvider, FirebaseService],
-      exports: [firebaseConfigProvider, firebaseProvider, FirebaseService],
+      providers: [firebaseConfigProvider, firebaseProvider, FirebaseService, FirebaseRepository],
+      exports: [firebaseConfigProvider, firebaseProvider, FirebaseService, FirebaseRepository],
     };
   }
 }

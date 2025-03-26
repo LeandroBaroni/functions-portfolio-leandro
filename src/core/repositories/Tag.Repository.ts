@@ -1,42 +1,26 @@
-import {
-  CollectionReference,
-  Firestore,
-  OrderByDirection,
-  Query,
-  SetOptions,
-  WhereFilterOp,
-  getFirestore,
-} from 'firebase-admin/firestore';
+import { FirestoreCollectionName } from '@configs/firestoreCollectionName';
+import { DocumentNotFoundError } from '@exceptions/DocumentNotFoundError';
+import { Tag } from '@models/Tag';
+import { Injectable } from '@nestjs/common';
+import { AddDocument, FirebaseWhere, ReadOptions, SetDocument, UpdateDocument, WriteOptions } from '@typings/typings';
+import { ofFirestore } from '@utils/ofFirestore';
+import { serverTimestamp } from '@utils/serverTimestamp';
+import { toFirestore } from '@utils/toFirestore';
+import { OrderByDirection, Query, SetOptions, WhereFilterOp } from 'firebase-admin/firestore';
+import { FirebaseRepository } from './firebase.repository';
 
-import { DocumentNotFoundError } from '../exceptions/DocumentNotFoundError.js';
-import { BaseModel } from '../models/BaseModel.js';
-import {
-  AddDocument,
-  FirebaseWhere,
-  ReadOptions,
-  SetDocument,
-  UpdateDocument,
-  WriteOptions,
-} from '../typings/typings.js';
-import { ofFirestore } from '../utils/ofFirestore.js';
-import { serverTimestamp } from '../utils/serverTimestamp.js';
-import { toFirestore } from '../utils/toFirestore.js';
+@Injectable()
+export class UserRepository {
+  private collection: FirebaseFirestore.CollectionReference<
+    FirebaseFirestore.DocumentData,
+    FirebaseFirestore.DocumentData
+  >;
 
-/**
- * Classe abstrata para interações com o Firestore.
- * Fornece métodos para operações CRUD e consultas comuns.
- *
- * @template T - Tipo que estende Model, representando a estrutura dos documentos na coleção.
- */
-export abstract class FirebaseAbstract<T extends BaseModel> {
-  /**
-   * @param {string} collectionName - Nome da coleção no Firestore.
-   * @param {Firestore} [firestore=getFirestore()] - Instância do Firestore. Por padrão, usa a instância global.
-   */
-  public constructor(
-    protected collectionName: string,
-    protected firestore: Firestore = getFirestore()
-  ) {}
+  constructor(private readonly firebaseRepository: FirebaseRepository) {
+    const firestore = this.firebaseRepository.getFirestore();
+    const collectionPath = FirestoreCollectionName.TAGS;
+    this.collection = firestore.collection(collectionPath);
+  }
 
   /**
    * Adiciona um novo documento à coleção.
@@ -49,7 +33,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * const userRepo = new UserRepository();
    * const newUserId = await userRepo.add({ name: 'John Doe', email: 'john@example.com' });
    */
-  public async add(data: AddDocument<T>, options: WriteOptions = { timestamps: true }): Promise<string> {
+  public async add(data: AddDocument<Tag>, options: WriteOptions = { timestamps: true }) {
     const clone = toFirestore(data);
 
     if (options.timestamps) {
@@ -59,7 +43,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
 
     Reflect.deleteProperty(clone, 'id');
 
-    const { id } = await this.collection().add(clone);
+    const { id } = await this.collection.add(clone);
 
     return id;
   }
@@ -77,7 +61,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @performance
    * Atualizar apenas os campos necessários, em vez do documento inteiro, melhora o desempenho.
    */
-  public async update(data: UpdateDocument<T>, options: WriteOptions = { timestamps: true }): Promise<void> {
+  public async update(data: UpdateDocument<Tag>, options: WriteOptions = { timestamps: true }): Promise<void> {
     const clone = toFirestore(data);
 
     if (options.timestamps) {
@@ -87,7 +71,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
 
     Reflect.deleteProperty(clone, 'id');
 
-    await this.collection().doc(data.id).update(clone);
+    await this.collection.doc(data.id).update(clone);
   }
 
   /**
@@ -103,7 +87,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @performance
    * Usar `merge: true` nas opções pode ser mais eficiente ao atualizar documentos existentes.
    */
-  public async set(data: SetDocument<T>, options: SetOptions & WriteOptions = { timestamps: true }): Promise<void> {
+  public async set(data: SetDocument<Tag>, options: SetOptions & WriteOptions = { timestamps: true }): Promise<void> {
     const clone = toFirestore(data);
 
     if (options.timestamps) {
@@ -113,7 +97,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
 
     Reflect.deleteProperty(clone, 'id');
 
-    await this.collection().doc(data.id).set(clone, options);
+    await this.collection.doc(data.id).set(clone, options);
   }
 
   /**
@@ -126,7 +110,7 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * await userRepo.delete('user123');
    */
   public async delete(id: string): Promise<void> {
-    await this.collection().doc(id).delete();
+    await this.collection.doc(id).delete();
   }
 
   /**
@@ -140,14 +124,14 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @example
    * const user = await userRepo.getById('user123');
    */
-  public async getById<U extends T = T>(id: string, options: ReadOptions = { timestamps: true }): Promise<U> {
-    const doc = await this.collection().doc(id).get();
+  public async getById(id: string, options: ReadOptions = { timestamps: true }): Promise<Tag> {
+    const doc = await this.collection.doc(id).get();
 
     if (!doc.exists) {
-      throw new DocumentNotFoundError(this.collectionName, id);
+      throw new DocumentNotFoundError(FirestoreCollectionName.USERS, id);
     }
 
-    return ofFirestore(doc, options.timestamps);
+    return ofFirestore<Tag>(doc, options.timestamps);
   }
 
   /**
@@ -160,8 +144,8 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @example
    * const users = await userRepo.getByIds(['user123', 'user456']);
    */
-  public async getByIds<U extends T = T>(ids: string[], options: ReadOptions = { timestamps: true }): Promise<U[]> {
-    const promises = ids.map((id) => this.getById<U>(id, options));
+  public async getByIds(ids: string[], options: ReadOptions = { timestamps: true }): Promise<Tag[]> {
+    const promises = ids.map((id) => this.getById(id, options));
     return Promise.all(promises);
   }
 
@@ -177,8 +161,8 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @performance
    * Pode ser custoso para coleções grandes. Considere usar paginação ou limites.
    */
-  public getAll<U extends T = T>(options: ReadOptions = { timestamps: true }): Promise<U[]> {
-    return this.getDocs(this.collection(), options);
+  public getAll(options: ReadOptions = { timestamps: true }) {
+    return this.getDocs(this.collection, options);
   }
 
   /**
@@ -199,16 +183,16 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @performance
    * Use índices compostos para consultas com orderBy em campos diferentes do filtro.
    */
-  protected getWhere<U extends T = T>(
-    field: keyof T,
+  protected getWhere(
+    field: keyof Tag,
     operator: WhereFilterOp,
     value: unknown,
     limit: number | null = null,
-    orderBy: keyof T | null = null,
+    orderBy: keyof Tag | null = null,
     orderByDirection: OrderByDirection | null = null,
     options: ReadOptions = { timestamps: true }
-  ): Promise<U[]> {
-    let q = this.collection().where(field as string, operator, value);
+  ): Promise<Tag[]> {
+    let q = this.collection.where(field as string, operator, value);
 
     if (limit) {
       q = q.limit(limit);
@@ -240,14 +224,14 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @performance
    * Consultas complexas podem exigir índices compostos. Verifique o console do Firebase para recomendações.
    */
-  protected getWhereMany<U extends T = T>(
-    filters: FirebaseWhere<T>[],
+  protected getWhereMany(
+    filters: FirebaseWhere<Tag>[],
     limit: number | null = null,
-    orderBy: keyof T | null = null,
+    orderBy: keyof Tag | null = null,
     orderByDirection: OrderByDirection | null = null,
     options: ReadOptions = { timestamps: true }
-  ): Promise<U[]> {
-    let q: Query = this.collection();
+  ): Promise<Tag[]> {
+    let q: Query = this.collection;
 
     for (const [field, operator, value] of filters) {
       q = q.where(field as string, operator, value);
@@ -278,15 +262,15 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    * @example
    * const newestActiveUser = await userRepo.getOneWhere('status', '==', 'active', 'createdAt', 'desc');
    */
-  protected async getOneWhere<U extends T = T>(
-    field: keyof T,
+  protected async getOneWhere(
+    field: keyof Tag,
     operator: WhereFilterOp,
     value: unknown,
-    orderBy: keyof T | null = null,
+    orderBy: keyof Tag | null = null,
     orderByDirection: OrderByDirection | null = null,
     options: ReadOptions = { timestamps: true }
-  ): Promise<U | null> {
-    const documents = await this.getWhere<U>(field, operator, value, 1, orderBy, orderByDirection, options);
+  ): Promise<Tag | null> {
+    const documents = await this.getWhere(field, operator, value, 1, orderBy, orderByDirection, options);
     return documents.length ? documents[0] : null;
   }
 
@@ -305,13 +289,13 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    *   ['age', '>', 18]
    * ], 'lastLogin', 'desc');
    */
-  protected async getOneWhereMany<U extends T = T>(
-    filters: FirebaseWhere<T>[],
-    orderBy: keyof T | null = null,
+  protected async getOneWhereMany(
+    filters: FirebaseWhere<Tag>[],
+    orderBy: keyof Tag | null = null,
     orderByDirection: OrderByDirection | null = null,
     options: ReadOptions = { timestamps: true }
-  ): Promise<U | null> {
-    const documents = await this.getWhereMany<U>(filters, 1, orderBy, orderByDirection, options);
+  ): Promise<Tag | null> {
+    const documents = await this.getWhereMany(filters, 1, orderBy, orderByDirection, options);
     return documents.length ? documents[0] : null;
   }
 
@@ -320,20 +304,11 @@ export abstract class FirebaseAbstract<T extends BaseModel> {
    *
    * @param {Query} query - Consulta do Firestore.
    * @param {ReadOptions} [options={ timestamps: true }] - Opções de leitura.
-   * @returns {Promise<U[]>} Array de documentos resultantes da consulta.
+   * @returns {Promise<User[]>} Array de documentos resultantes da consulta.
    */
-  protected async getDocs<U extends T = T>(query: Query, options: ReadOptions = { timestamps: true }): Promise<U[]> {
+  protected async getDocs(query: Query, options: ReadOptions = { timestamps: true }): Promise<Tag[]> {
     const { docs } = await query.get();
 
-    return docs.map((document) => ofFirestore(document, options.timestamps));
-  }
-
-  /**
-   * Retorna a referência da coleção no Firestore.
-   *
-   * @returns {CollectionReference} Referência da coleção.
-   */
-  protected collection(): CollectionReference {
-    return this.firestore.collection(this.collectionName);
+    return docs.map((document) => ofFirestore<Tag>(document, options.timestamps));
   }
 }

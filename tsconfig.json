@@ -19,9 +19,13 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@dtos/*": ["src/core/DTOs/*"],
+      "@configs/*": ["src/core/configs/*"],
       "@enums/*": ["src/core/enums/*"],
+      "@exceptions/*": ["src/core/exceptions/*"],
+      "guards/*": ["src/core/guards/*"],
       "@interfaces/*": ["src/core/interfaces/*"],
       "@models/*": ["src/core/models/*"],
+      "@typings/*": ["src/core/typings/*"],
       "@utils/*": ["src/core/utils/*"]
     }
   }

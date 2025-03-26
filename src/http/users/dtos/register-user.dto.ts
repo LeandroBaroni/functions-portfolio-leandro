@@ -10,7 +10,7 @@ export class RegisterUserDTO {
   @IsString()
   name: string;
 
-  @ApiProperty({ description: "The user's email" })
+  @ApiProperty({ description: "The user's email address" })
   @IsNotEmpty()
   @IsEmail()
   email: string;

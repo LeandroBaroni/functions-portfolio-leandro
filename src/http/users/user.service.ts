@@ -1,16 +1,18 @@
+import { UserPermission } from '@enums/UserPermission';
 import { UserType } from '@enums/UserType';
+import { ApiError } from '@exceptions/ApiError';
 import { Injectable } from '@nestjs/common';
 import { FirebaseAuthError } from 'firebase-admin/auth';
-import { ApiError } from 'src/core/exceptions/ApiError';
-import { UserPermission } from '../../core/enums/UserPermission';
+import { UserRepository } from 'src/core/repositories/User.Repository';
 import { FirebaseService } from '../firebase/firebase.service';
+import { ChangeActiveUserDTO } from './dtos/change-active-user.dto';
 import { RegisterUserDTO } from './dtos/register-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly firebaseService: FirebaseService
-    // private userRepository: UserRepository
+    private readonly firebaseService: FirebaseService,
+    private userRepository: UserRepository
   ) {}
 
   async createUser(registerUser: RegisterUserDTO) {
@@ -22,8 +24,9 @@ export class UserService {
         email,
         password,
         disabled: false,
-        phoneNumber: phone.phoneNumber,
       });
+
+      console.log(uid);
 
       id = uid;
 
@@ -40,7 +43,7 @@ export class UserService {
         await this.firebaseService.setCustomClaims(id, { type, permissions });
       }
 
-      // await this.userRepository.add({ name, email, active: true, type, phones: [] });
+      await this.userRepository.add({ name, email, active: true, type, phones: [phone] });
 
       return uid;
     } catch (error) {
@@ -48,6 +51,22 @@ export class UserService {
         await this.firebaseService.deleteUser(id);
       }
 
+      if (error instanceof FirebaseAuthError) {
+        throw new ApiError(error.message, error.code, 401);
+      }
+      throw error;
+    }
+  }
+
+  async changeActiveUser(changeActiveDTO: ChangeActiveUserDTO): Promise<void> {
+    try {
+      const { id } = changeActiveDTO;
+      const user = await this.firebaseService.getById(id);
+      const disabled = !user.disabled;
+      await this.firebaseService.update({ id, disabled });
+
+      await this.userRepository.update({ id, active: !disabled });
+    } catch (error) {
       if (error instanceof FirebaseAuthError) {
         throw new ApiError(error.message, error.code, 401);
       }

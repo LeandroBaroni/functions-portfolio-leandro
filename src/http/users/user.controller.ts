@@ -1,4 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Put } from '@nestjs/common';
+import { ChangeActiveUserDTO } from './dtos/change-active-user.dto';
 import { RegisterUserDTO } from './dtos/register-user.dto';
 import { UserService } from './user.service';
 
@@ -11,5 +12,10 @@ export class UserController {
     const id = await this.userService.createUser(dto);
 
     return id;
+  }
+
+  @Put(':id/active')
+  async changeActiveUser(@Param() changeActiveDTO: ChangeActiveUserDTO) {
+    await this.userService.changeActiveUser(changeActiveDTO);
   }
 }

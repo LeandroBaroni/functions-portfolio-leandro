@@ -1,8 +1,9 @@
 import { UserPermission } from '@enums/UserPermission';
 import { UserType } from '@enums/UserType';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as firebaseAdmin from 'firebase-admin';
-import { CreateRequest, UpdateRequest, UserRecord } from 'firebase-admin/auth';
+import { CreateRequest, DecodedIdToken, FirebaseAuthError, UpdateRequest, UserRecord } from 'firebase-admin/auth';
+import { ApiError } from 'src/core/exceptions/ApiError';
 
 interface ParamsUpdate extends UpdateRequest {
   id: string;
@@ -45,5 +46,19 @@ export class FirebaseService {
 
   async getById(userId: string): Promise<UserRecord> {
     return firebaseAdmin.auth().getUser(userId);
+  }
+
+  async verifyIdToken(token: string, checkRevoked = false) {
+    return (await firebaseAdmin
+      .auth()
+      .verifyIdToken(token, checkRevoked)
+      .catch(this.handleFirebaseAuthError)) as DecodedIdToken;
+  }
+
+  private handleFirebaseAuthError(error: FirebaseAuthError) {
+    if (error.code && error.code.startsWith('auth/')) {
+      throw new BadRequestException(error.message);
+    }
+    throw new ApiError(error.message, error.code, 498);
   }
 }
