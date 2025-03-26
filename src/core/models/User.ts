@@ -1,4 +1,4 @@
-import { UserType } from '../enums/UserType';
+import { UserType } from '@enums/UserType';
 import { Phone } from '../interfaces/Phone';
 import { BaseModel } from './BaseModel';
 

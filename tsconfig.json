@@ -16,6 +16,13 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@dtos/*": ["src/core/DTOs/*"],
+      "@enums/*": ["src/core/enums/*"],
+      "@interfaces/*": ["src/core/interfaces/*"],
+      "@models/*": ["src/core/models/*"],
+      "@utils/*": ["src/core/utils/*"]
+    }
   }
 }

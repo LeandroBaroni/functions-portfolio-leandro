@@ -1,8 +1,8 @@
+import { UserPermission } from '@enums/UserPermission';
+import { UserType } from '@enums/UserType';
 import { Injectable } from '@nestjs/common';
 import * as firebaseAdmin from 'firebase-admin';
 import { CreateRequest, UpdateRequest, UserRecord } from 'firebase-admin/auth';
-import { UserPermission } from 'src/code/enums/UserPermission';
-import { UserType } from 'src/code/enums/UserType';
 
 interface ParamsUpdate extends UpdateRequest {
   id: string;

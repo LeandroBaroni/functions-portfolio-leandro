@@ -1,4 +1,4 @@
-import { ApiError } from 'src/code/exceptions/ApiError';
+import { ApiError } from 'src/core/exceptions/ApiError';
 
 export class FirebaseConfigService {
   constructor(public readonly apiKey: string) {

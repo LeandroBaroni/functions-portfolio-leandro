@@ -1,6 +1,8 @@
+import { UserType } from '@enums/UserType';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString, Length } from 'class-validator';
-import { UserType } from 'src/code/enums/UserType';
+import { Type } from 'class-transformer';
+import { IsEmail, IsEnum, IsNotEmpty, IsObject, IsString, Length, ValidateNested } from 'class-validator';
+import { PhoneDTO } from 'src/core/DTOs/phone.dto';
 
 export class RegisterUserDTO {
   @ApiProperty({ description: "The user's name" })
@@ -23,4 +25,10 @@ export class RegisterUserDTO {
   @IsNotEmpty()
   @IsEnum(UserType)
   type: UserType;
+
+  @ApiProperty({ description: "The user's phone" })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => PhoneDTO)
+  phone: PhoneDTO;
 }

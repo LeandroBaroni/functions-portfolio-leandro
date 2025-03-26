@@ -1,6 +1,6 @@
 type PhoneType = 'tel' | 'residential' | 'fax';
 
-export interface Phone {
+export class Phone {
   phoneNumber: string;
   type: PhoneType;
 }

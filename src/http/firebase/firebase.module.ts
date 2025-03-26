@@ -1,7 +1,7 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as firebaseAdmin from 'firebase-admin';
-import { ApiError } from 'src/code/exceptions/ApiError';
+import { ApiError } from 'src/core/exceptions/ApiError';
 import { FirebaseConfigService } from './firebase-config.service';
 import { FirebaseService } from './firebase.service';
 
@@ -13,7 +13,7 @@ export class FirebaseModule {
       provide: FirebaseConfigService,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const apiKey = configService.get<string>('FIREFASE_API_KEY');
+        const apiKey = configService.get<string>('FIREBASE_API_KEY');
         if (!apiKey) {
           throw new ApiError(
             'FIREBASE_API_KEY environment variable is not set',
