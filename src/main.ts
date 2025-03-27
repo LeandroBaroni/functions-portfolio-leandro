@@ -4,7 +4,7 @@ import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app: INestApplication = await NestFactory.create<INestApplication>(AppModule);
   configureSwagger(app);
   configureValidationPipe(app);
   await app.listen(process.env.PORT ?? 3000);

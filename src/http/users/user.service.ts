@@ -1,11 +1,13 @@
 import { UserPermission } from '@enums/UserPermission';
 import { UserType } from '@enums/UserType';
 import { ApiError } from '@exceptions/ApiError';
+import { User } from '@models/User';
 import { Injectable } from '@nestjs/common';
 import { FirebaseAuthError } from 'firebase-admin/auth';
 import { UserRepository } from 'src/core/repositories/User.Repository';
 import { FirebaseService } from '../firebase/firebase.service';
 import { ChangeActiveUserDTO } from './dtos/change-active-user.dto';
+import { GetUserByIdDTO } from './dtos/get-user-by-id.dto';
 import { RegisterUserDTO } from './dtos/register-user.dto';
 
 @Injectable()
@@ -26,8 +28,6 @@ export class UserService {
         disabled: false,
       });
 
-      console.log(uid);
-
       id = uid;
 
       if (type === UserType.ADMIN) {
@@ -43,7 +43,7 @@ export class UserService {
         await this.firebaseService.setCustomClaims(id, { type, permissions });
       }
 
-      await this.userRepository.add({ name, email, active: true, type, phones: [phone] });
+      await this.userRepository.set({ id, name, email, active: true, type, phones: [phone] });
 
       return uid;
     } catch (error) {
@@ -70,6 +70,16 @@ export class UserService {
       if (error instanceof FirebaseAuthError) {
         throw new ApiError(error.message, error.code, 401);
       }
+      throw error;
+    }
+  }
+
+  async getUserById({ id }: GetUserByIdDTO): Promise<User> {
+    try {
+      const user = await this.userRepository.getById(id);
+
+      return user;
+    } catch (error) {
       throw error;
     }
   }
