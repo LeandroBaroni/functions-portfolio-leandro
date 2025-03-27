@@ -12,8 +12,8 @@ async function bootstrap() {
 
 function configureSwagger(app: INestApplication) {
   const config: Omit<OpenAPIObject, 'paths'> = new DocumentBuilder()
-    .setTitle('Firebase Auth')
-    .setDescription('Autenticação do Firebase no NestJS')
+    .setTitle('Portfólio Leandro Baroni')
+    .setDescription('APIS Portfólio')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
