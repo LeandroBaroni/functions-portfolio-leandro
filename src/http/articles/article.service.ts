@@ -16,4 +16,10 @@ export class ArticleService {
 
     return documents;
   }
+
+  async getById(id: string): Promise<Article> {
+    const document = await this.articleRepository.getById(id);
+
+    return document;
+  }
 }

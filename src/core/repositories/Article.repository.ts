@@ -1,4 +1,5 @@
 import { FirestoreCollectionName } from '@configs/firestoreCollectionName';
+import { DocumentNotFoundError } from '@exceptions/DocumentNotFoundError';
 import { Article } from '@models/Article';
 import { Injectable } from '@nestjs/common';
 import { AddDocument, ReadOptions, WriteOptions } from '@typings/typings';
@@ -55,5 +56,15 @@ export class ArticleRepository {
     const { docs } = await query.get();
 
     return docs.map((document) => ofFirestore<Article>(document, options.timestamps));
+  }
+
+  public async getById(id: string, options: ReadOptions = { timestamps: true }): Promise<Article> {
+    const doc = await this.collection.doc(id).get();
+
+    if (!doc.exists) {
+      throw new DocumentNotFoundError(FirestoreCollectionName.ARTICLES, id);
+    }
+
+    return ofFirestore<Article>(doc, options.timestamps);
   }
 }

@@ -1,6 +1,7 @@
-import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateDTO } from './dtos/create.dto';
+import { GetByIdDTO } from './dtos/GetById.dto';
 
 @Controller('articles')
 export class ArticleController {
@@ -8,7 +9,7 @@ export class ArticleController {
 
   @Post()
   @HttpCode(201)
-  async create(@Param() createDTO: CreateDTO) {
+  async create(@Body() createDTO: CreateDTO) {
     const { description, title, cover, tagIds, topicId, userId, steps } = createDTO;
 
     console.log({ description, title, cover, tagIds, topicId, userId, steps });
@@ -31,5 +32,15 @@ export class ArticleController {
     const results = await this.articleService.getAll();
 
     return results;
+  }
+
+  @Get(':id')
+  @HttpCode(200)
+  async getById(@Param() data: GetByIdDTO) {
+    const { id } = data;
+
+    const article = await this.articleService.getById(id);
+
+    return article;
   }
 }

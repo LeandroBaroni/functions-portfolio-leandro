@@ -4,19 +4,23 @@ import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { StepDto } from './step.dto';
 
 export class CreateDTO {
-  @ApiProperty({ description: 'ID from the user logged' })
+  @ApiProperty({ description: 'ID from the user logged', required: true })
+  @IsOptional()
   @IsString()
   userId: string;
 
-  @ApiProperty({ description: 'Article title' })
+  @ApiProperty({ description: 'Article title', required: true })
+  @IsOptional()
   @IsString()
   title: string;
 
-  @ApiProperty({ description: 'Article description' })
+  @ApiProperty({ description: 'Article description', required: true })
+  @IsOptional()
   @IsString()
   description: string;
 
-  @ApiProperty({ description: 'Topic ID' })
+  @ApiProperty({ description: 'Topic ID', required: true })
+  @IsOptional()
   @IsString()
   topicId: string;
 
@@ -32,6 +36,7 @@ export class CreateDTO {
   tagIds: string[];
 
   @ApiProperty({ type: [StepDto] })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StepDto)
